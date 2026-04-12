@@ -3,116 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neural Logic Builder (Gemini Powered)</title>
+    <title>AUTOSITE V2 - Instant Logic</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
-        body { background: #050505; color: #e2e8f0; font-family: 'Space Grotesk', sans-serif; height: 100vh; overflow: hidden; }
-        .sidebar { width: 420px; border-right: 1px solid #222; background: #0a0a0a; z-index: 50; }
-        .preview-area { flex: 1; background: #000; display: flex; align-items: center; justify-content: center; padding: 30px; position: relative; }
-        .glass-panel { background: rgba(15, 15, 15, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
-        .status-pulse { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap');
         
-        #preview-frame {
-            width: 100%;
-            height: 100%;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        body { 
+            background: #0f111a; 
+            color: #e2e8f0; 
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        .ai-glow {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 70%);
-            pointer-events: none;
+        .glass-sidebar {
+            background: #1e2230;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        .input-area {
+            background: #252a3d;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .input-area:focus-within {
+            border-color: #7c3aed;
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.15);
+        }
+
+        .btn-magic {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-magic:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+        }
+
+        .preview-pane {
+            background: #0a0b10;
+        }
+
+        .phone-mockup {
+            width: 320px;
+            height: 600px;
+            background: #ffffff;
+            border-radius: 40px;
+            border: 8px solid #1a1d26;
+            box-shadow: 0 50px 100px -20px rgba(0,0,0,0.7);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #3f445e; border-radius: 10px; }
+        
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #7c3aed;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="flex">
 
-    <aside class="sidebar flex flex-col p-8">
-        <div class="mb-10">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="status-pulse"></div>
-                <h1 class="text-xl font-bold tracking-tight">NEURAL <span class="text-indigo-500">SYNTHESIZER</span></h1>
+    <!-- Main Sidebar -->
+    <aside class="glass-sidebar w-[400px] flex flex-col p-8 shrink-0 relative">
+        <div class="flex items-center justify-between mb-12">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg text-xl">A</div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-tight leading-none">AUTOSITE <span class="text-indigo-500">V2</span></h1>
+                    <span class="text-[10px] text-slate-500 font-medium uppercase tracking-widest">Pure Logic Injection</span>
+                </div>
             </div>
-            <p class="text-xs text-slate-500 font-medium uppercase tracking-[0.2em]">Gemini 2.5 Flash Engine v2.0</p>
         </div>
 
-        <div class="flex-1 space-y-6 overflow-y-auto">
-            <div class="space-y-3">
-                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Global Prompt</label>
-                <textarea id="prompt" placeholder="e.g. 'A retro 80s arcade snake game with neon colors and high score saving' or 'A financial mortgage calculator with pie charts'..." 
-                    class="w-full h-40 bg-white/5 border border-white/10 rounded-xl p-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"></textarea>
+        <div class="flex-1 space-y-6">
+            <div>
+                <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 block">Application Logic</label>
+                <div class="input-area rounded-2xl p-4">
+                    <textarea id="prompt" placeholder="Describe the functionality. Example: 'A calculator that swears at you' or 'A habit tracker with streaks'..." 
+                        class="w-full h-64 bg-transparent text-sm text-slate-200 outline-none resize-none placeholder:text-slate-600"></textarea>
+                </div>
             </div>
 
-            <button onclick="generateNeuralApp()" id="buildBtn" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-bold transition-all flex items-center justify-center gap-3 group">
-                <span id="btnText">Synthesize Logic</span>
-                <svg id="loadingIcon" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            </button>
-
-            <button onclick="downloadCode()" id="downloadBtn" class="hidden w-full py-4 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-600/30 rounded-xl font-bold transition-all items-center justify-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            <button onclick="generateApp()" id="btn" class="btn-magic w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95">
+                <span id="btnText">Generate Magic</span>
+                <div id="loader" class="loader"></div>
+                <svg id="spark" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                Export Source Code
             </button>
 
-            <div class="p-4 rounded-xl glass-panel text-[11px] leading-relaxed text-slate-400">
-                <strong class="text-white block mb-1">How it works:</strong>
-                Your prompt is sent to a Gemini LLM. It generates a single-file application with full JavaScript logic. No predefined templates are used.
+            <div id="status" class="hidden text-center py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+                ✨ App injected successfully!
             </div>
         </div>
 
-        <div class="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
-            <span class="text-[10px] text-slate-600">APP_ID: NEURAL_BETA</span>
-            <div class="flex gap-2">
-                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                <div class="w-2 h-2 rounded-full bg-purple-500"></div>
-            </div>
+        <div class="mt-8">
+            <button onclick="copySource()" class="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-slate-400 font-semibold text-sm hover:bg-white/10 transition-all">
+                Copy Generated Source
+            </button>
+            <p class="text-[10px] text-slate-600 mt-4 text-center italic">
+                No rules. Just fast, working code.
+            </p>
         </div>
     </aside>
 
-    <main class="preview-area">
-        <div class="ai-glow top-1/4 left-1/4"></div>
-        <div class="ai-glow bottom-1/4 right-1/4"></div>
+    <!-- Preview Canvas -->
+    <main class="preview-pane flex-1 flex items-center justify-center relative">
+        <div class="phone-mockup">
+            <iframe id="preview-frame" class="w-full h-full border-none" 
+                srcdoc="<body style='background:#f9fafb;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;font-family:sans-serif;color:#94a3b8;padding:20px;text-align:center;'><div><svg style='width:48px;height:48px;margin-bottom:16px;opacity:0.2;' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='1' d='M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'></path></svg><h2 style='margin:0;font-size:18px;color:#475569;'>Awaiting Logic</h2><p style='font-size:11px;text-transform:uppercase;letter-spacing:1.5px;margin-top:8px;'>Build something epic.</p></div></body>"></iframe>
+        </div>
         
-        <iframe id="preview-frame" srcdoc="<body style='background:#000;display:flex;align-items:center;justify-content:center;height:100vh;color:#444;font-family:sans-serif;'>Waiting for neural synthesis...</body>"></iframe>
+        <div class="absolute bottom-10 text-[10px] text-slate-700 tracking-[0.4em] uppercase font-bold">
+            Live Production View
+        </div>
     </main>
 
     <script>
-        const apiKey = ""; // Injected at runtime
-        let lastGeneratedCode = "";
+        const apiKey = ""; // Injected by the environment
 
-        async function generateNeuralApp() {
+        function copySource() {
+            const code = document.getElementById('preview-frame').srcdoc;
+            const textArea = document.createElement("textarea");
+            textArea.value = code;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+        }
+
+        async function generateApp() {
             const prompt = document.getElementById('prompt').value;
             if (!prompt) return;
 
             const btnText = document.getElementById('btnText');
-            const loader = document.getElementById('loadingIcon');
-            const buildBtn = document.getElementById('buildBtn');
-            const downloadBtn = document.getElementById('downloadBtn');
+            const loader = document.getElementById('loader');
+            const spark = document.getElementById('spark');
+            const status = document.getElementById('status');
+            const frame = document.getElementById('preview-frame');
 
-            btnText.innerText = "Synthesizing...";
-            loader.classList.remove('hidden');
-            buildBtn.disabled = true;
+            btnText.innerText = "Injecting Logic...";
+            loader.style.display = "block";
+            spark.style.display = "none";
+            status.classList.add('hidden');
 
-            const systemPrompt = `You are a Senior Full-Stack Engineer. Create a FULLY FUNCTIONAL, SELF-CONTAINED single-file web application (HTML, CSS, and interactive JavaScript) based on the user's request. 
-            Rules:
-            1. Output ONLY the raw HTML code. Do not include markdown code blocks (no \`\`\`html).
-            2. The app must be visually stunning (use Tailwind CSS via CDN: <script src="https://cdn.tailwindcss.com"><\/script>).
-            3. Include all necessary JavaScript logic (game loops, math, state management) inside <script> tags.
-            4. Make it modern, responsive, and high-quality. No placeholders.
-            5. Ensure all interactive elements (buttons, inputs, canvas) work perfectly.`;
+            const systemPrompt = "You are a senior full-stack developer. Build a single-file HTML/CSS/JS web app based on the prompt. Use Tailwind CSS via CDN. Ensure the logic is robust, professional, and fits within a mobile viewport (max-width: 400px). Provide ONLY the code. No markdown formatting. If the user asks for a specific feature, make sure it actually functions (e.g. calculator must calculate).";
+
+            const fetchWithRetry = async (url, options, retries = 5, backoff = 1000) => {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return response;
+                } catch (err) {
+                    if (retries > 0) {
+                        await new Promise(r => setTimeout(r, backoff));
+                        return fetchWithRetry(url, options, retries - 1, backoff * 2);
+                    }
+                    throw err;
+                }
+            };
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                const response = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -122,34 +189,32 @@
                 });
 
                 const data = await response.json();
-                const code = data.candidates[0].content.parts[0].text.trim();
+                let code = data.candidates[0].content.parts[0].text;
                 
-                // Remove markdown wrapper if AI hallucinated it
-                const cleanedCode = code.replace(/^```html/, '').replace(/```$/, '');
-                
-                lastGeneratedCode = cleanedCode;
-                document.getElementById('preview-frame').srcdoc = cleanedCode;
-                downloadBtn.style.display = "flex";
+                // Clean markdown wrappers if AI adds them
+                code = code.replace(/^```html\n/, '').replace(/\n```$/, '').replace(/^```/, '');
 
-            } catch (err) {
-                console.error("Synthesis failed:", err);
-                document.getElementById('preview-frame').srcdoc = `<body style="background:#000;color:red;padding:20px;">Error synthesizing logic. Check console or connection.</body>`;
+                // Inject into iframe
+                frame.srcdoc = code;
+
+                status.classList.remove('hidden');
+                btnText.innerText = "Injected!";
+                setTimeout(() => {
+                    status.classList.add('hidden');
+                    btnText.innerText = "Generate Magic";
+                }, 3000);
+
+            } catch (e) {
+                console.error(e);
+                btnText.innerText = "Error";
+                status.innerText = "⚠️ Failed to reach the brain. Try again.";
+                status.classList.remove('hidden');
+                status.classList.replace('bg-emerald-500/10', 'bg-red-500/10');
+                status.classList.replace('text-emerald-400', 'text-red-400');
             } finally {
-                btnText.innerText = "Synthesize Logic";
-                loader.classList.add('hidden');
-                buildBtn.disabled = false;
+                loader.style.display = "none";
+                spark.style.display = "block";
             }
-        }
-
-        function downloadCode() {
-            if (!lastGeneratedCode) return;
-            const blob = new Blob([lastGeneratedCode], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = "neural-app.html";
-            a.click();
-            URL.revokeObjectURL(url);
         }
     </script>
 </body>
