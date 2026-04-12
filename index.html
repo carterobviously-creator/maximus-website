@@ -3,156 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Builder - OpenRouter Edition</title>
+    <title>Neural Logic Builder (Gemini Powered)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #09090b; color: #fafafa; font-family: system-ui, sans-serif; }
-        .sidebar { width: 320px; border-right: 1px solid #27272a; background: #121214; }
-        .preview-area { flex: 1; background: #18181b; padding: 2rem; overflow-y: auto; display: flex; justify-content: center; }
-        #site-canvas { width: 100%; max-width: 800px; background: white; color: #18181b; border-radius: 12px; min-height: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; transition: all 0.3s ease; }
-        .loader { border: 2px solid #3f3f46; border-top: 2px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
+        body { background: #050505; color: #e2e8f0; font-family: 'Space Grotesk', sans-serif; height: 100vh; overflow: hidden; }
+        .sidebar { width: 420px; border-right: 1px solid #222; background: #0a0a0a; z-index: 50; }
+        .preview-area { flex: 1; background: #000; display: flex; align-items: center; justify-content: center; padding: 30px; position: relative; }
+        .glass-panel { background: rgba(15, 15, 15, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .status-pulse { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981; }
         
-        #toast { 
-            position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; 
-            border-radius: 8px; display: none; z-index: 100; font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        #preview-frame {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-        .toast-success { background: #10b981; color: white; }
-        .toast-error { background: #ef4444; color: white; }
+
+        .ai-glow {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
     </style>
 </head>
-<body class="h-screen flex overflow-hidden">
+<body class="flex">
 
-    <!-- Sidebar -->
-    <div class="sidebar flex flex-col p-6 shrink-0">
-        <div class="mb-8">
-            <h1 class="text-2xl font-black tracking-tighter text-blue-500 italic">OPEN<span class="text-white">GEN</span></h1>
-            <p class="text-[10px] text-zinc-500 uppercase font-bold tracking-widest">GitHub Ready / OpenRouter</p>
+    <aside class="sidebar flex flex-col p-8">
+        <div class="mb-10">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="status-pulse"></div>
+                <h1 class="text-xl font-bold tracking-tight">NEURAL <span class="text-indigo-500">SYNTHESIZER</span></h1>
+            </div>
+            <p class="text-xs text-slate-500 font-medium uppercase tracking-[0.2em]">Gemini 2.5 Flash Engine v2.0</p>
         </div>
 
-        <div class="flex-1 overflow-y-auto pr-2">
-            <!-- API Key Section -->
-            <label class="block text-xs font-bold text-zinc-400 mb-2 uppercase tracking-wide">OpenRouter API Key</label>
-            <input type="password" id="orKey" placeholder="sk-or-v1-..." 
-                class="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-xs mb-4 outline-none focus:border-blue-500 transition-all">
+        <div class="flex-1 space-y-6 overflow-y-auto">
+            <div class="space-y-3">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Global Prompt</label>
+                <textarea id="prompt" placeholder="e.g. 'A retro 80s arcade snake game with neon colors and high score saving' or 'A financial mortgage calculator with pie charts'..." 
+                    class="w-full h-40 bg-white/5 border border-white/10 rounded-xl p-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"></textarea>
+            </div>
 
-            <label class="block text-xs font-bold text-zinc-400 mb-2 uppercase tracking-wide">Describe your vision</label>
-            <textarea id="prompt" placeholder="Ex: A minimalist interior design portfolio with large photos and serif fonts..." 
-                class="w-full h-40 bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-sm focus:border-blue-500 outline-none resize-none mb-4 transition-all focus:ring-1 focus:ring-blue-500"></textarea>
-
-            <button onclick="generate()" id="genBtn" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all active:scale-95">
-                <span id="btnText">Build Website</span>
-                <div id="loading" class="loader"></div>
+            <button onclick="generateNeuralApp()" id="buildBtn" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-bold transition-all flex items-center justify-center gap-3 group">
+                <span id="btnText">Synthesize Logic</span>
+                <svg id="loadingIcon" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
             </button>
-        </div>
 
-        <div class="mt-auto border-t border-zinc-800 pt-6">
-            <button onclick="publish()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-3 rounded-lg font-bold transition mb-2">
-                Publish to Local
-            </button>
-            <p class="text-[10px] text-zinc-500 text-center italic">Saved locally in your browser</p>
-        </div>
-    </div>
-
-    <!-- Preview Area -->
-    <div class="preview-area">
-        <div id="site-canvas">
-            <div id="empty-state" class="flex flex-col items-center justify-center h-full text-zinc-400 py-40 text-center px-10">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mb-4 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            <button onclick="downloadCode()" id="downloadBtn" class="hidden w-full py-4 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-600/30 rounded-xl font-bold transition-all items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                <p class="text-xl font-medium">Ready to Build.</p>
-                <p class="text-sm opacity-50 mt-2">Enter your OpenRouter key and prompt to start.</p>
+                Export Source Code
+            </button>
+
+            <div class="p-4 rounded-xl glass-panel text-[11px] leading-relaxed text-slate-400">
+                <strong class="text-white block mb-1">How it works:</strong>
+                Your prompt is sent to a Gemini LLM. It generates a single-file application with full JavaScript logic. No predefined templates are used.
             </div>
         </div>
-    </div>
 
-    <div id="toast"></div>
+        <div class="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
+            <span class="text-[10px] text-slate-600">APP_ID: NEURAL_BETA</span>
+            <div class="flex gap-2">
+                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                <div class="w-2 h-2 rounded-full bg-purple-500"></div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="preview-area">
+        <div class="ai-glow top-1/4 left-1/4"></div>
+        <div class="ai-glow bottom-1/4 right-1/4"></div>
+        
+        <iframe id="preview-frame" srcdoc="<body style='background:#000;display:flex;align-items:center;justify-content:center;height:100vh;color:#444;font-family:sans-serif;'>Waiting for neural synthesis...</body>"></iframe>
+    </main>
 
     <script>
-        // Load key from storage on start
-        window.onload = () => {
-            const savedKey = localStorage.getItem('or_api_key');
-            if (savedKey) document.getElementById('orKey').value = savedKey;
-            
-            const savedSite = localStorage.getItem('saved_site_data');
-            if (savedSite) document.getElementById('site-canvas').innerHTML = savedSite;
-        };
+        const apiKey = ""; // Injected at runtime
+        let lastGeneratedCode = "";
 
-        function notify(msg, type = 'success') {
-            const t = document.getElementById('toast');
-            t.innerText = msg;
-            t.className = type === 'success' ? 'toast-success' : 'toast-error';
-            t.style.display = 'block';
-            setTimeout(() => { t.style.display = 'none'; }, 3000);
-        }
-
-        async function generate() {
-            const key = document.getElementById('orKey').value;
-            const promptInput = document.getElementById('prompt').value;
-
-            if (!key) return notify("Enter your OpenRouter Key!", "error");
-            if (!promptInput) return notify("Describe the site!", "error");
-
-            // Save key for next time
-            localStorage.setItem('or_api_key', key);
+        async function generateNeuralApp() {
+            const prompt = document.getElementById('prompt').value;
+            if (!prompt) return;
 
             const btnText = document.getElementById('btnText');
-            const loader = document.getElementById('loading');
-            const canvas = document.getElementById('site-canvas');
+            const loader = document.getElementById('loadingIcon');
+            const buildBtn = document.getElementById('buildBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
 
-            btnText.innerText = "Connecting to OpenRouter...";
-            loader.style.display = "block";
-            document.getElementById('genBtn').disabled = true;
+            btnText.innerText = "Synthesizing...";
+            loader.classList.remove('hidden');
+            buildBtn.disabled = true;
+
+            const systemPrompt = `You are a Senior Full-Stack Engineer. Create a FULLY FUNCTIONAL, SELF-CONTAINED single-file web application (HTML, CSS, and interactive JavaScript) based on the user's request. 
+            Rules:
+            1. Output ONLY the raw HTML code. Do not include markdown code blocks (no \`\`\`html).
+            2. The app must be visually stunning (use Tailwind CSS via CDN: <script src="https://cdn.tailwindcss.com"><\/script>).
+            3. Include all necessary JavaScript logic (game loops, math, state management) inside <script> tags.
+            4. Make it modern, responsive, and high-quality. No placeholders.
+            5. Ensure all interactive elements (buttons, inputs, canvas) work perfectly.`;
 
             try {
-                const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${key}`,
-                        "Content-Type": "application/json",
-                        "HTTP-Referer": window.location.href, // Required by OpenRouter
-                        "X-Title": "AI Website Builder"
-                    },
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        "model": "google/gemini-2.0-flash-001", // Using Gemini through OpenRouter
-                        "messages": [
-                            {
-                                "role": "system",
-                                "content": "You are a senior web developer. Create a beautiful, modern, and fully functional website section using ONLY Tailwind CSS. Return ONLY raw HTML code. Do not use markdown backticks."
-                            },
-                            {
-                                "role": "user",
-                                "content": promptInput
-                            }
-                        ]
+                        contents: [{ parts: [{ text: prompt }] }],
+                        systemInstruction: { parts: [{ text: systemPrompt }] }
                     })
                 });
 
-                const result = await response.json();
+                const data = await response.json();
+                const code = data.candidates[0].content.parts[0].text.trim();
                 
-                if (result.error) throw new Error(result.error.message);
+                // Remove markdown wrapper if AI hallucinated it
+                const cleanedCode = code.replace(/^```html/, '').replace(/```$/, '');
+                
+                lastGeneratedCode = cleanedCode;
+                document.getElementById('preview-frame').srcdoc = cleanedCode;
+                downloadBtn.style.display = "flex";
 
-                let htmlContent = result.choices[0].message.content;
-                htmlContent = htmlContent.replace(/```html|```/g, "").trim();
-                
-                canvas.innerHTML = htmlContent;
-                notify("Site Generated!");
             } catch (err) {
-                console.error(err);
-                notify(err.message, "error");
+                console.error("Synthesis failed:", err);
+                document.getElementById('preview-frame').srcdoc = `<body style="background:#000;color:red;padding:20px;">Error synthesizing logic. Check console or connection.</body>`;
             } finally {
-                loader.style.display = "none";
-                btnText.innerText = "Build Website";
-                document.getElementById('genBtn').disabled = false;
+                btnText.innerText = "Synthesize Logic";
+                loader.classList.add('hidden');
+                buildBtn.disabled = false;
             }
         }
 
-        function publish() {
-            const content = document.getElementById('site-canvas').innerHTML;
-            localStorage.setItem('saved_site_data', content);
-            notify("Published Locally!");
+        function downloadCode() {
+            if (!lastGeneratedCode) return;
+            const blob = new Blob([lastGeneratedCode], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "neural-app.html";
+            a.click();
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>
