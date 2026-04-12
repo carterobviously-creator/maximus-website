@@ -3,253 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forge Logic - GitHub Integrated</title>
+    <title>Forge Logic Elite | V4 Final</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
         
-        :root {
-            --accent: #6366f1;
-            --accent-glow: rgba(99, 102, 241, 0.4);
-        }
-
         body { 
-            background: #05060b; 
+            background: #020203; 
             color: #f8fafc; 
             font-family: 'Plus Jakarta Sans', sans-serif;
             height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
         }
 
-        .neo-sidebar {
-            background: rgba(13, 15, 23, 0.9);
+        .glass-panel {
+            background: rgba(15, 15, 25, 0.8);
             backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.05);
-            width: 440px;
-        }
-
-        .input-group {
-            background: #0d0f17;
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 12px;
-            transition: all 0.2s;
         }
 
-        .input-group:focus-within {
-            border-color: var(--accent);
-            box-shadow: 0 0 15px var(--accent-glow);
-        }
-
-        input, textarea {
+        .forge-input {
             background: transparent;
             border: none;
             outline: none;
             color: #fff;
             width: 100%;
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
 
-        .btn-forge {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        .action-button {
+            background: #ffffff;
+            color: #000000;
+            transition: all 0.3s ease;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        .btn-forge:hover:not(:disabled) {
-            transform: translateY(-1px);
-            filter: brightness(1.1);
+        .action-button:hover:not(:disabled) {
+            background: #6366f1;
+            color: white;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
         }
 
-        .device-frame {
-            width: 100%;
-            max-width: 1000px;
-            height: 85%;
-            background: #fff;
+        .preview-container {
+            flex: 1;
+            margin: 12px;
             border-radius: 20px;
-            border: 8px solid #1e2230;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
             overflow: hidden;
+            background: #000;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
         }
 
-        .loader {
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-top: 2px solid #fff;
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        #loadingOverlay {
+            background: #020203;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loader-ring {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255,255,255,0.05);
+            border-top: 3px solid #6366f1;
             border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            animation: spin 0.8s linear infinite;
+            animation: spin 1s linear infinite;
         }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .progress-bar {
+            width: 250px;
+            height: 4px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        #progressFill {
+            height: 100%;
+            background: #6366f1;
+            width: 0%;
+            transition: width 0.3s;
+        }
     </style>
 </head>
-<body class="flex">
+<body>
 
-    <aside class="neo-sidebar flex flex-col p-6 shrink-0 relative z-10 overflow-y-auto">
-        <div class="flex items-center gap-3 mb-8">
-            <div class="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+    <div id="loadingOverlay" class="fixed inset-0">
+        <div class="loader-ring"></div>
+        <p id="statusLabel" class="text-[10px] text-white/40 uppercase tracking-widest mt-6">Initializing Forge Engine...</p>
+        <div class="progress-bar">
+            <div id="progressFill"></div>
+        </div>
+    </div>
+
+    <header class="px-6 pt-6 flex justify-between items-center">
+        <span class="font-black text-sm tracking-tighter">FORGE ELITE V4</span>
+        <div id="genMsg" class="text-[9px] text-white/20 uppercase tracking-widest font-bold">Local AI Ready</div>
+    </header>
+
+    <main class="flex-1 flex flex-col min-h-0">
+        <div class="preview-container">
+            <div id="emptyState" class="absolute inset-0 flex items-center justify-center bg-[#020203]">
+                <p class="text-white/10 text-[10px] font-mono tracking-[0.4em] uppercase">Neural Workspace Empty</p>
             </div>
-            <h1 class="text-xl font-bold text-white tracking-tight">FORGE <span class="text-indigo-400">GH</span></h1>
-        </div>
-
-        <div class="space-y-6">
-            <!-- GitHub Settings -->
-            <div>
-                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">GitHub Configuration</label>
-                <div class="space-y-3">
-                    <div class="input-group">
-                        <input type="text" id="ghRepo" placeholder="username/repo_name" class="placeholder:text-slate-700">
-                    </div>
-                    <div class="input-group">
-                        <input type="password" id="ghToken" placeholder="GitHub Personal Access Token (ghp_...)" class="placeholder:text-slate-700">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Prompt -->
-            <div>
-                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Application Logic</label>
-                <div class="input-group">
-                    <textarea id="prompt" rows="8" placeholder="Describe your app... (e.g. 'A sleek dashboard for crypto prices with real-time updates')" class="placeholder:text-slate-700 resize-none"></textarea>
-                </div>
-            </div>
-
-            <button onclick="forgeAndPush()" id="forgeBtn" class="btn-forge w-full py-4 rounded-xl font-bold text-white flex items-center justify-center gap-3 transition-all disabled:opacity-50">
-                <span id="btnText">Generate & Push to GitHub</span>
-                <div id="loader" class="loader hidden"></div>
-            </button>
-            
-            <div id="statusMsg" class="text-xs text-center font-medium min-h-[1rem]"></div>
-        </div>
-
-        <div class="mt-auto pt-6 border-t border-white/5">
-            <button onclick="downloadBackup()" class="w-full py-2 text-xs text-slate-400 hover:text-white transition-colors">Download Local Backup Instead</button>
-        </div>
-    </aside>
-
-    <main class="flex-1 flex flex-col items-center justify-center p-8 bg-[#08090f]">
-        <div id="frameWrapper" class="device-frame opacity-0 scale-95 transition-all duration-500">
-            <iframe id="preview" class="w-full h-full border-none"></iframe>
-        </div>
-        <div id="emptyState" class="text-center">
-            <h2 class="text-2xl font-bold text-slate-700">Ready to Forge</h2>
-            <p class="text-slate-500 text-sm mt-2">Enter your GitHub details and prompt to start.</p>
+            <iframe id="preview" class="hidden"></iframe>
         </div>
     </main>
 
-    <script>
-        const apiKey = ""; // Provided by environment
+    <footer class="p-6 pb-8">
+        <div class="max-w-4xl mx-auto glass-panel p-2 rounded-2xl flex items-center gap-4">
+            <div class="pl-4 flex-1">
+                <input type="text" id="promptInput" class="forge-input" placeholder="Enter site vision..." disabled>
+            </div>
+            <button onclick="handleForge()" id="forgeBtn" disabled class="action-button px-8 py-4 rounded-xl">Build</button>
+        </div>
+    </footer>
 
-        async function forgeAndPush() {
-            const repo = document.getElementById('ghRepo').value.trim();
-            const token = document.getElementById('ghToken').value.trim();
-            const prompt = document.getElementById('prompt').value.trim();
-            const status = document.getElementById('statusMsg');
-            const btn = document.getElementById('forgeBtn');
-            const btnText = document.getElementById('btnText');
-            const loader = document.getElementById('loader');
+    <script type="module">
+        import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
 
-            if (!prompt) return showStatus("Please enter a prompt", "text-red-400");
-            
-            btn.disabled = true;
-            btnText.innerText = "Generating...";
-            loader.classList.remove('hidden');
-            showStatus("Consulting AI Engine...", "text-indigo-400");
+        env.allowLocalModels = false;
+        env.useBrowserCache = true;
 
+        let generator = null;
+        const elements = {
+            loading: document.getElementById('loadingOverlay'),
+            progress: document.getElementById('progressFill'),
+            status: document.getElementById('statusLabel'),
+            input: document.getElementById('promptInput'),
+            btn: document.getElementById('forgeBtn'),
+            msg: document.getElementById('genMsg'),
+            preview: document.getElementById('preview'),
+            empty: document.getElementById('emptyState')
+        };
+
+        async function init() {
             try {
-                // 1. Generate Content
-                const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
-                        systemInstruction: { parts: [{ text: "Return only valid HTML/CSS/JS code for a single file application. Use Tailwind. No markdown backticks." }] }
-                    })
+                generator = await pipeline('text-generation', 'Xenova/Qwen1.5-0.5B-Chat', {
+                    progress_callback: (p) => {
+                        if (p.status === 'progress') {
+                            elements.progress.style.width = `${p.progress}%`;
+                            elements.status.innerText = `Caching AI Core: ${Math.round(p.progress)}%`;
+                        }
+                    }
                 });
-
-                const aiData = await aiResponse.json();
-                let code = aiData.candidates[0].content.parts[0].text;
-                code = code.replace(/^```html\n?/, '').replace(/\n?```$/, '').trim();
-
-                const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><script src="https://cdn.tailwindcss.com"><\/script></head><body>${code}</body></html>`;
-
-                // 2. Update Preview
-                const preview = document.getElementById('preview');
-                preview.srcdoc = fullHtml;
-                preview.setAttribute('data-last-code', fullHtml);
-                document.getElementById('emptyState').classList.add('hidden');
-                document.getElementById('frameWrapper').classList.remove('opacity-0', 'scale-95');
-
-                // 3. GitHub Push (If details provided)
-                if (repo && token) {
-                    showStatus("Pushing to GitHub...", "text-yellow-400");
-                    await pushToGitHub(repo, token, fullHtml);
-                    showStatus("Success! Live on GitHub.", "text-green-400");
-                } else {
-                    showStatus("Generated locally (GitHub skipped)", "text-slate-400");
-                }
-
-            } catch (err) {
-                console.error(err);
-                showStatus("Error: " + err.message, "text-red-400");
-            } finally {
-                btn.disabled = false;
-                btnText.innerText = "Generate & Push to GitHub";
-                loader.classList.add('hidden');
+                elements.loading.style.display = 'none';
+                elements.input.disabled = false;
+                elements.btn.disabled = false;
+            } catch (e) {
+                elements.status.innerText = "Error Loading AI Engine.";
+                console.error(e);
             }
         }
 
-        async function pushToGitHub(repo, token, content) {
-            const path = 'index.html';
-            const url = `https://api.github.com/repos/${repo}/contents/${path}`;
-            
-            // Get existing file SHA if it exists (to update)
-            let sha = null;
+        window.handleForge = async () => {
+            const prompt = elements.input.value.trim();
+            if (!prompt || !generator) return;
+
+            elements.btn.disabled = true;
+            elements.msg.innerText = "Forging... (Brief lag expected)";
+
+            const template = `<|im_start|>system\nYou are a master developer. Create a clean HTML website with Tailwind CSS. Return ONLY raw HTML code. Do not use markdown blocks.<|im_end|>\n<|im_start|>user\nBuild: ${prompt}<|im_end|>\n<|im_start|>assistant`;
+
             try {
-                const getRes = await fetch(url, { headers: { 'Authorization': `token ${token}` } });
-                if (getRes.ok) {
-                    const getData = await getRes.json();
-                    sha = getData.sha;
-                }
-            } catch (e) {}
+                setTimeout(async () => {
+                    const result = await generator(template, {
+                        max_new_tokens: 1200,
+                        temperature: 0.1,
+                        do_sample: false
+                    });
 
-            const body = {
-                message: "Update from Forge Logic Engine",
-                content: btoa(unescape(encodeURIComponent(content))),
-                sha: sha
-            };
+                    let code = result[0].generated_text.split('<|im_start|>assistant')[1] || result[0].generated_text;
+                    code = code.replace(/```html|```/gi, '').trim();
 
-            const putRes = await fetch(url, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `token ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(body)
-            });
-
-            if (!putRes.ok) {
-                const errData = await putRes.json();
-                throw new Error(errData.message || "GitHub Upload Failed");
+                    elements.preview.srcdoc = code;
+                    elements.preview.classList.remove('hidden');
+                    elements.empty.classList.add('hidden');
+                    elements.msg.innerText = "Forge complete.";
+                    elements.btn.disabled = false;
+                }, 100);
+            } catch (err) {
+                elements.msg.innerText = "Forge failed.";
+                elements.btn.disabled = false;
             }
-        }
+        };
 
-        function showStatus(msg, colorClass) {
-            const status = document.getElementById('statusMsg');
-            status.innerText = msg;
-            status.className = `text-xs text-center font-medium mt-2 ${colorClass}`;
-        }
-
-        function downloadBackup() {
-            const code = document.getElementById('preview').getAttribute('data-last-code');
-            if (!code) return;
-            const blob = new Blob([code], { type: 'text/html' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'index.html';
-            a.click();
-        }
+        init();
     </script>
 </body>
 </html>
