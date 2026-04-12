@@ -162,15 +162,29 @@
         }
 
         function exportCode() {
-            const code = document.getElementById('mainCanvas').srcdoc;
+            const frame = document.getElementById('mainCanvas');
+            const code = frame.getAttribute('data-full-code') || frame.srcdoc;
+            
             if(!code) return;
+
+            // Create a blob for a real file download instead of just clipboard
+            const blob = new Blob([code], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'forge-app.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            // Still copy to clipboard as a backup
             const textArea = document.createElement("textarea");
             textArea.value = code;
             document.body.appendChild(textArea);
             textArea.select();
             document.execCommand('copy');
             document.body.removeChild(textArea);
-            alert('Functional code copied!');
         }
 
         async function forgeApp() {
@@ -213,23 +227,30 @@
                 const data = await response.json();
                 let result = data.candidates[0].content.parts[0].text;
                 
-                // Cleanup markdown wrappers
+                // Cleanup markdown wrappers if AI provides them despite instructions
                 result = result.replace(/^```html\n?/, '').replace(/\n?```$/, '').trim();
 
-                // Inject code into the iframe
-                frame.srcdoc = `
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <script src="https://cdn.tailwindcss.com"><\/script>
-                        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-                        <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
-                    </head>
-                    <body>
-                        ${result}
-                    </body>
-                    </html>
-                `;
+                // Build the FULL standalone document
+                const fullDocument = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; min-height: 100vh; background-color: #f8fafc; color: #1e293b; }
+    </style>
+</head>
+<body>
+    ${result}
+</body>
+</html>`;
+
+                // Store full code for export
+                frame.setAttribute('data-full-code', fullDocument);
+                // Inject into preview
+                frame.srcdoc = fullDocument;
                 
                 empty.classList.add('opacity-0');
                 setTimeout(() => {
