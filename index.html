@@ -23,7 +23,7 @@
             font-family: 'Segoe UI', system-ui, sans-serif;
         }
 
-        /* Neon shimmer on the forge button while loading */
+        /* Neon shimmer animation */
         @keyframes neon-shimmer {
             0%   { background-position: -200% 0; }
             100% { background-position:  200% 0; }
@@ -283,7 +283,7 @@
     <!-- Command bar -->
     <div id="command-bar" class="fixed top-0 left-0 right-0 z-10 p-3">
         <div class="flex items-center gap-3 max-w-6xl mx-auto">
-            <span id="site-title">⚡ Maximus</span>
+            <span id="site-title">⚡ MAXIMUS</span>
             <input type="text" id="prompt" class="flex-1" placeholder="Describe your website…">
             <button id="forge">Forge</button>
             <button id="settings">⚙ Settings</button>
@@ -374,14 +374,14 @@
                 const data = await response.json();
 
                 if (!response.ok || !data.choices) {
-                    const errMsg = (data.error && data.error.message) || JSON.stringify(data);
+                    const errMsg = (data.error && data.error.message) || 'Unknown API error occurred';
                     throw new Error(errMsg);
                 }
 
                 let html = data.choices[0].message.content;
 
                 // Strip any markdown code fences
-                html = html.replace(/```html\s*/gi, '').replace(/```\s*/g, '');
+                html = html.replace(/```html\s*/gi, '').replace(/```\s*/gi, '');
 
                 // Show in iframe
                 const blob = new Blob([html], { type: 'text/html' });
