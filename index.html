@@ -3,51 +3,321 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Website Builder</title>
+    <title>⚡ MAXIMUS — AI Website Forge</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
+        :root {
+            --neon-cyan: #00f5ff;
+            --neon-magenta: #ff00e5;
+            --neon-green: #39ff14;
+            --neon-yellow: #ffe600;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background: #020010;
+            background-image:
+                radial-gradient(ellipse at 20% 50%, rgba(0, 245, 255, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(255, 0, 229, 0.06) 0%, transparent 60%);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        /* Neon shimmer on the forge button while loading */
+        @keyframes neon-shimmer {
+            0%   { background-position: -200% 0; }
+            100% { background-position:  200% 0; }
         }
         .shimmer {
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
+            background: linear-gradient(
+                90deg,
+                var(--neon-magenta),
+                var(--neon-cyan),
+                var(--neon-green),
+                var(--neon-yellow),
+                var(--neon-magenta)
+            ) !important;
+            background-size: 300% 100% !important;
+            animation: neon-shimmer 1.2s linear infinite !important;
+            color: #020010 !important;
+            text-shadow: none !important;
         }
-        .glow:focus {
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+
+        /* Scanline overlay for that CRT feel */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.15) 2px,
+                rgba(0, 0, 0, 0.15) 4px
+            );
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* Command bar */
+        #command-bar {
+            background: rgba(2, 0, 16, 0.9);
+            border-bottom: 1px solid rgba(0, 245, 255, 0.25);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 2px 30px rgba(0, 245, 255, 0.1);
+        }
+
+        /* Neon title */
+        #site-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--neon-cyan);
+            text-shadow:
+                0 0 6px var(--neon-cyan),
+                0 0 20px var(--neon-cyan),
+                0 0 40px rgba(0, 245, 255, 0.4);
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        /* Prompt input */
+        #prompt {
+            background: rgba(0, 245, 255, 0.04);
+            color: #e0faff;
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            caret-color: var(--neon-cyan);
+        }
+        #prompt::placeholder { color: rgba(0, 245, 255, 0.35); }
+        #prompt:focus {
+            outline: none;
+            border-color: var(--neon-cyan);
+            box-shadow:
+                0 0 8px var(--neon-cyan),
+                0 0 20px rgba(0, 245, 255, 0.3),
+                inset 0 0 8px rgba(0, 245, 255, 0.05);
+        }
+
+        /* Forge button */
+        #forge {
+            background: linear-gradient(135deg, #00c8e0, #0050a0);
+            color: #fff;
+            border: 1px solid var(--neon-cyan);
+            border-radius: 8px;
+            padding: 10px 24px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            transition: box-shadow 0.2s, transform 0.1s;
+            text-shadow: 0 0 6px var(--neon-cyan);
+            box-shadow: 0 0 10px rgba(0, 245, 255, 0.4), 0 0 30px rgba(0, 245, 255, 0.15);
+        }
+        #forge:hover:not(:disabled) {
+            box-shadow: 0 0 18px var(--neon-cyan), 0 0 50px rgba(0, 245, 255, 0.3);
+            transform: translateY(-1px);
+        }
+        #forge:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+        /* Settings button */
+        #settings {
+            background: rgba(255, 0, 229, 0.12);
+            color: var(--neon-magenta);
+            border: 1px solid rgba(255, 0, 229, 0.4);
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: box-shadow 0.2s, transform 0.1s;
+            text-shadow: 0 0 6px var(--neon-magenta);
+        }
+        #settings:hover {
+            box-shadow: 0 0 14px var(--neon-magenta), 0 0 40px rgba(255, 0, 229, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Preview placeholder */
+        #preview-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 16px;
+            color: rgba(0, 245, 255, 0.25);
+            pointer-events: none;
+            user-select: none;
+        }
+        #preview-placeholder .big-icon {
+            font-size: 5rem;
+            filter: drop-shadow(0 0 12px rgba(0, 245, 255, 0.3));
+        }
+        #preview-placeholder p {
+            font-size: 1rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        /* Settings modal backdrop */
+        #settings-modal {
+            background: rgba(2, 0, 16, 0.8);
+            backdrop-filter: blur(8px);
+        }
+
+        /* Settings modal panel */
+        .modal-panel {
+            background: rgba(5, 0, 30, 0.97);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 14px;
+            padding: 28px;
+            min-width: 360px;
+            box-shadow:
+                0 0 30px rgba(0, 245, 255, 0.2),
+                0 0 80px rgba(255, 0, 229, 0.08),
+                inset 0 0 20px rgba(0, 245, 255, 0.03);
+        }
+        .modal-panel h2 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px var(--neon-cyan);
+            margin-bottom: 18px;
+        }
+        .modal-panel label {
+            display: block;
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(0, 245, 255, 0.6);
+            margin-bottom: 8px;
+        }
+
+        /* API key input in modal */
+        #api-key {
+            width: 100%;
+            background: rgba(0, 245, 255, 0.04);
+            color: #e0faff;
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 7px;
+            padding: 9px 14px;
+            font-size: 0.9rem;
+            caret-color: var(--neon-cyan);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        #api-key::placeholder { color: rgba(0, 245, 255, 0.25); }
+        #api-key:focus {
+            outline: none;
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 10px rgba(0, 245, 255, 0.35), inset 0 0 8px rgba(0, 245, 255, 0.05);
+        }
+
+        /* Save button */
+        #save-settings {
+            background: linear-gradient(135deg, rgba(57, 255, 20, 0.2), rgba(0, 180, 60, 0.3));
+            color: var(--neon-green);
+            border: 1px solid rgba(57, 255, 20, 0.5);
+            border-radius: 7px;
+            padding: 8px 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.06em;
+            cursor: pointer;
+            transition: box-shadow 0.2s;
+            text-shadow: 0 0 6px var(--neon-green);
+        }
+        #save-settings:hover {
+            box-shadow: 0 0 14px var(--neon-green), 0 0 40px rgba(57, 255, 20, 0.2);
+        }
+
+        /* Cancel button */
+        #cancel-settings {
+            background: rgba(255, 0, 229, 0.08);
+            color: var(--neon-magenta);
+            border: 1px solid rgba(255, 0, 229, 0.35);
+            border-radius: 7px;
+            padding: 8px 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 0.06em;
+            cursor: pointer;
+            transition: box-shadow 0.2s;
+        }
+        #cancel-settings:hover {
+            box-shadow: 0 0 12px var(--neon-magenta), 0 0 30px rgba(255, 0, 229, 0.15);
+        }
+
+        /* Corner accent lines */
+        .corner-tl, .corner-br {
+            position: fixed;
+            width: 80px;
+            height: 80px;
+            pointer-events: none;
+            z-index: 900;
+            opacity: 0.4;
+        }
+        .corner-tl {
+            top: 70px; left: 0;
+            border-top: 2px solid var(--neon-cyan);
+            border-left: 2px solid var(--neon-cyan);
+        }
+        .corner-br {
+            bottom: 0; right: 0;
+            border-bottom: 2px solid var(--neon-magenta);
+            border-right: 2px solid var(--neon-magenta);
         }
     </style>
 </head>
-<body class="bg-zinc-950 text-white min-h-screen flex flex-col">
+<body class="text-white min-h-screen flex flex-col">
+    <!-- Corner accents -->
+    <div class="corner-tl"></div>
+    <div class="corner-br"></div>
+
     <!-- Command bar -->
-    <div class="fixed top-0 left-0 right-0 z-10 bg-zinc-900 p-4 shadow-lg">
-        <div class="flex items-center justify-center space-x-4">
-            <input type="text" id="prompt" class="flex-1 px-4 py-2 bg-zinc-800 text-white rounded-lg border border-zinc-700 focus:outline-none glow" placeholder="Describe your website...">
-            <button id="forge" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Forge</button>
-            <button id="settings" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg">Settings</button>
+    <div id="command-bar" class="fixed top-0 left-0 right-0 z-10 p-3">
+        <div class="flex items-center gap-3 max-w-6xl mx-auto">
+            <span id="site-title">⚡ Maximus</span>
+            <input type="text" id="prompt" class="flex-1" placeholder="Describe your website…">
+            <button id="forge">Forge</button>
+            <button id="settings">⚙ Settings</button>
         </div>
     </div>
+
     <!-- Preview area -->
-    <iframe id="preview" class="w-full h-screen mt-16"></iframe>
+    <div class="w-full flex-1 mt-14" style="height: calc(100vh - 56px); position: relative;">
+        <div id="preview-placeholder">
+            <div class="big-icon">⚡</div>
+            <p>Enter a description and hit Forge</p>
+        </div>
+        <iframe id="preview" class="w-full h-full" style="display:none; border:none;"></iframe>
+    </div>
+
     <!-- Settings modal -->
-    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-20">
-        <div class="bg-zinc-800 p-6 rounded-lg">
-            <h2 class="text-lg mb-4">Settings</h2>
-            <label for="api-key" class="block mb-2">OpenRouter API Key:</label>
-            <input type="password" id="api-key" class="w-full px-3 py-2 bg-zinc-700 text-white rounded" placeholder="Enter your API key">
-            <div class="flex justify-end space-x-2 mt-4">
-                <button id="save-settings" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Save</button>
-                <button id="cancel-settings" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded">Cancel</button>
+    <div id="settings-modal" class="fixed inset-0 hidden flex items-center justify-center z-20">
+        <div class="modal-panel">
+            <h2>⚙ Settings</h2>
+            <label for="api-key">OpenRouter API Key</label>
+            <input type="password" id="api-key" placeholder="sk-or-…">
+            <div class="flex justify-end gap-3 mt-5">
+                <button id="cancel-settings">Cancel</button>
+                <button id="save-settings">Save</button>
             </div>
         </div>
     </div>
+
     <script>
         const promptInput = document.getElementById('prompt');
         const forgeBtn = document.getElementById('forge');
         const settingsBtn = document.getElementById('settings');
         const preview = document.getElementById('preview');
+        const placeholder = document.getElementById('preview-placeholder');
         const modal = document.getElementById('settings-modal');
         const apiKeyInput = document.getElementById('api-key');
         const saveSettingsBtn = document.getElementById('save-settings');
@@ -59,20 +329,14 @@
             apiKeyInput.value = apiKey;
         }
 
-        // Show modal
-        function showModal() {
-            modal.classList.remove('hidden');
-        }
-
-        // Hide modal
-        function hideModal() {
-            modal.classList.add('hidden');
-        }
+        // Show / hide modal
+        function showModal() { modal.classList.remove('hidden'); }
+        function hideModal() { modal.classList.add('hidden'); }
 
         settingsBtn.addEventListener('click', showModal);
         cancelSettingsBtn.addEventListener('click', hideModal);
         saveSettingsBtn.addEventListener('click', () => {
-            apiKey = apiKeyInput.value;
+            apiKey = apiKeyInput.value.trim();
             localStorage.setItem('openrouter-api-key', apiKey);
             hideModal();
         });
@@ -87,7 +351,7 @@
             if (!userPrompt.trim()) return;
 
             forgeBtn.disabled = true;
-            forgeBtn.textContent = 'Forging...';
+            forgeBtn.textContent = '⚡ Forging…';
             forgeBtn.classList.add('shimmer');
 
             try {
@@ -95,10 +359,12 @@
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${apiKey}`,
+                        'HTTP-Referer': window.location.href,
+                        'X-Title': 'Maximus AI Website Forge',
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        model: 'minimax/minimax-01',
+                        model: 'meta-llama/llama-3.2-3b-instruct:free',
                         messages: [
                             { role: 'user', content: `Generate the complete HTML code for a website based on this description: ${userPrompt}. Output only the HTML code, no markdown code blocks or explanations.` }
                         ],
@@ -106,18 +372,26 @@
                 });
 
                 const data = await response.json();
+
+                if (!response.ok || !data.choices) {
+                    const errMsg = (data.error && data.error.message) || JSON.stringify(data);
+                    throw new Error(errMsg);
+                }
+
                 let html = data.choices[0].message.content;
 
-                // Clean: strip ```html and ```
-                html = html.replace(/```html\s*/g, '').replace(/```\s*$/g, '');
+                // Strip any markdown code fences
+                html = html.replace(/```html\s*/gi, '').replace(/```\s*/g, '');
 
-                // Inject into iframe
+                // Show in iframe
                 const blob = new Blob([html], { type: 'text/html' });
                 preview.src = URL.createObjectURL(blob);
+                placeholder.style.display = 'none';
+                preview.style.display = 'block';
 
             } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to generate website. Check your API key and try again.');
+                console.error('Forge error:', error);
+                alert('Failed to generate website.\n\n' + error.message);
             } finally {
                 forgeBtn.disabled = false;
                 forgeBtn.textContent = 'Forge';
