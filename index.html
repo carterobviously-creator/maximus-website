@@ -6,40 +6,187 @@
     <title>AI Website Builder</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        :root {
+            --cyan: #00f5ff;
+            --magenta: #ff00e5;
+            --green: #00ff88;
+        }
+
+        body {
+            background: #050510;
+            background-image:
+                linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
         @keyframes shimmer {
-            0% { background-position: -200% 0; }
+            0%   { background-position: -200% 0; }
             100% { background-position: 200% 0; }
         }
+        @keyframes neon-pulse {
+            0%, 100% { box-shadow: 0 0 8px var(--cyan), 0 0 20px rgba(0,245,255,0.3); }
+            50%       { box-shadow: 0 0 16px var(--cyan), 0 0 40px rgba(0,245,255,0.5); }
+        }
+        @keyframes border-glow {
+            0%, 100% { border-color: var(--cyan); }
+            50%       { border-color: var(--magenta); }
+        }
+
         .shimmer {
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(0,245,255,0.25),
+                rgba(255,0,229,0.2),
+                rgba(0,255,136,0.25),
+                transparent
+            );
             background-size: 200% 100%;
             animation: shimmer 1.5s infinite;
         }
-        .glow:focus {
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+
+        /* Command bar */
+        .neon-bar {
+            background: rgba(5, 5, 20, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0,245,255,0.3);
+            box-shadow: 0 2px 30px rgba(0,245,255,0.15);
+        }
+
+        /* Prompt input */
+        .neon-input {
+            background: rgba(10, 10, 30, 0.9);
+            border: 1px solid rgba(0,245,255,0.4);
+            color: #e0f8ff;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .neon-input::placeholder { color: rgba(0,245,255,0.35); }
+        .neon-input:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 12px rgba(0,245,255,0.5), inset 0 0 8px rgba(0,245,255,0.05);
+        }
+
+        /* Forge button */
+        .btn-forge {
+            background: linear-gradient(135deg, #00c8d7 0%, #0070ff 100%);
+            border: 1px solid var(--cyan);
+            color: #fff;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-shadow: 0 0 6px rgba(0,245,255,0.8);
+            box-shadow: 0 0 10px rgba(0,245,255,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+            transition: box-shadow 0.2s, transform 0.1s;
+        }
+        .btn-forge:hover:not(:disabled) {
+            box-shadow: 0 0 20px rgba(0,245,255,0.7), 0 0 40px rgba(0,245,255,0.3);
+            transform: translateY(-1px);
+        }
+        .btn-forge:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Settings button */
+        .btn-settings {
+            background: linear-gradient(135deg, #7b0075 0%, #cc00bb 100%);
+            border: 1px solid var(--magenta);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 0 10px rgba(255,0,229,0.35);
+            transition: box-shadow 0.2s, transform 0.1s;
+        }
+        .btn-settings:hover {
+            box-shadow: 0 0 20px rgba(255,0,229,0.65), 0 0 40px rgba(255,0,229,0.25);
+            transform: translateY(-1px);
+        }
+
+        /* Settings modal */
+        .neon-modal-bg {
+            background: rgba(0, 0, 10, 0.75);
+            backdrop-filter: blur(6px);
+        }
+        .neon-modal {
+            background: linear-gradient(145deg, #080820, #0d0d2a);
+            border: 1px solid rgba(0,245,255,0.5);
+            box-shadow: 0 0 40px rgba(0,245,255,0.25), 0 0 80px rgba(255,0,229,0.1);
+        }
+        .neon-modal h2 {
+            color: var(--cyan);
+            text-shadow: 0 0 8px rgba(0,245,255,0.7);
+            letter-spacing: 0.08em;
+        }
+        .neon-modal label { color: rgba(0,245,255,0.7); }
+        .neon-modal-input {
+            background: rgba(10, 10, 35, 0.9);
+            border: 1px solid rgba(0,245,255,0.3);
+            color: #e0f8ff;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .neon-modal-input:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 10px rgba(0,245,255,0.4);
+        }
+
+        /* Save button */
+        .btn-save {
+            background: linear-gradient(135deg, #00c8d7 0%, #0070ff 100%);
+            border: 1px solid var(--cyan);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 0 8px rgba(0,245,255,0.35);
+            transition: box-shadow 0.2s;
+        }
+        .btn-save:hover {
+            box-shadow: 0 0 18px rgba(0,245,255,0.6);
+        }
+
+        /* Cancel button */
+        .btn-cancel {
+            background: rgba(30,30,50,0.9);
+            border: 1px solid rgba(255,0,229,0.4);
+            color: rgba(255,0,229,0.9);
+            font-weight: 600;
+            transition: box-shadow 0.2s;
+        }
+        .btn-cancel:hover {
+            box-shadow: 0 0 12px rgba(255,0,229,0.5);
+        }
+
+        /* Title bar branding */
+        .title-glow {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            background: linear-gradient(90deg, var(--cyan), var(--magenta), var(--green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 6px rgba(0,245,255,0.5));
+            white-space: nowrap;
         }
     </style>
 </head>
-<body class="bg-zinc-950 text-white min-h-screen flex flex-col">
+<body class="text-white min-h-screen flex flex-col">
     <!-- Command bar -->
-    <div class="fixed top-0 left-0 right-0 z-10 bg-zinc-900 p-4 shadow-lg">
-        <div class="flex items-center justify-center space-x-4">
-            <input type="text" id="prompt" class="flex-1 px-4 py-2 bg-zinc-800 text-white rounded-lg border border-zinc-700 focus:outline-none glow" placeholder="Describe your website...">
-            <button id="forge" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Forge</button>
-            <button id="settings" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg">Settings</button>
+    <div class="neon-bar fixed top-0 left-0 right-0 z-10 p-4">
+        <div class="flex items-center justify-center space-x-3">
+            <span class="title-glow hidden sm:block">⚡ FORGE AI</span>
+            <input type="text" id="prompt" class="neon-input flex-1 px-4 py-2 rounded-lg" placeholder="Describe your website...">
+            <button id="forge" class="btn-forge px-6 py-2 rounded-lg">Forge</button>
+            <button id="settings" class="btn-settings px-4 py-2 rounded-lg">⚙</button>
         </div>
     </div>
     <!-- Preview area -->
     <iframe id="preview" class="w-full h-screen mt-16"></iframe>
     <!-- Settings modal -->
-    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-20">
-        <div class="bg-zinc-800 p-6 rounded-lg">
-            <h2 class="text-lg mb-4">Settings</h2>
-            <label for="api-key" class="block mb-2">OpenRouter API Key:</label>
-            <input type="password" id="api-key" class="w-full px-3 py-2 bg-zinc-700 text-white rounded" placeholder="Enter your API key">
+    <div id="settings-modal" class="neon-modal-bg fixed inset-0 hidden flex items-center justify-center z-20">
+        <div class="neon-modal p-6 rounded-xl w-80">
+            <h2 class="text-lg mb-4 font-bold uppercase tracking-widest">Settings</h2>
+            <label for="api-key" class="block mb-2 text-sm">OpenRouter API Key:</label>
+            <input type="password" id="api-key" class="neon-modal-input w-full px-3 py-2 rounded-lg" placeholder="sk-or-...">
             <div class="flex justify-end space-x-2 mt-4">
-                <button id="save-settings" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Save</button>
-                <button id="cancel-settings" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded">Cancel</button>
+                <button id="save-settings" class="btn-save px-4 py-2 rounded-lg">Save</button>
+                <button id="cancel-settings" class="btn-cancel px-4 py-2 rounded-lg">Cancel</button>
             </div>
         </div>
     </div>
@@ -98,7 +245,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        model: 'minimax/minimax-01',
+                        model: 'meta-llama/llama-3.2-3b-instruct:free',
                         messages: [
                             { role: 'user', content: `Generate the complete HTML code for a website based on this description: ${userPrompt}. Output only the HTML code, no markdown code blocks or explanations.` }
                         ],
